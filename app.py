@@ -2,6 +2,7 @@ from flask import Flask
 import utils.service
 from flask_cors import CORS
 
+
 app = Flask(__name__)
 CORS(app)
 
@@ -141,19 +142,19 @@ def countComponentsJiraSoftware():
     )
 
     countObject = {
-        "operational": operational,
-        "degraded_performance": degraded_performance,
-        "partial_outage": partial_outage,
-        "major_outage": major_outage,
-        "up": operational / countComponentsJiraSoftware * 100
+        "donw": major_outage,
+        "normal": operational,
+        "percentualDown": f"{major_outage/ countComponentsJiraSoftware * 100:.1f}%"
         if countComponentsJiraSoftware
-        else 0,
-        "warn": degraded_performance / countComponentsJiraSoftware * 100
+        else "0.00%",
+        "percentualNormal": f"{operational / countComponentsJiraSoftware * 100:.1f}%"
         if countComponentsJiraSoftware
-        else 0,
-        "down": (partial_outage + major_outage) / countComponentsJiraSoftware * 100
+        else "0.00%",
+        "percentualWarn": f"{(partial_outage + degraded_performance) / countComponentsJiraSoftware * 100:.1f}%"
         if countComponentsJiraSoftware
-        else 0,
+        else "0.00%",
+        "total": countComponentsJiraSoftware,
+        "warn": degraded_performance + partial_outage,
     }
 
     return countObject
@@ -180,3 +181,8 @@ def returnIncidentsHistoricJiraSoftware():
         )
 
     return filteredIncidentsHistoric
+
+
+@app.route("/aws/select")
+def index():
+    return utils.service.get_AWS_status("Sao Paulo")
