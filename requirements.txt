@@ -4,4 +4,4 @@ requests
 flask-cors
 selenium
 asgiref
-webdriver-manager
+redmail
