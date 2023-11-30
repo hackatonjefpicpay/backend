@@ -9,7 +9,6 @@ from redmail import outlook
 app = Flask(__name__)
 CORS(app)
 
-
 @app.route("/oracle/select")
 def findAllStatusInfoOracle():
     statusJson = utils.service.selectRequestUrl(
