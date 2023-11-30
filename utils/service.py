@@ -67,11 +67,15 @@ def get_AWS_status(region):
                 )
             )
 
+            print("consegiuu carregar pagina")
+
             input_element = driver.find_element(
                 By.XPATH, '//input[@aria-label="Find an AWS service or Region"]'
             )
             input_element.send_keys(f"Region = {region}")
             input_element.send_keys(Keys.ENTER)
+
+            print("consegiuu colocar regiao")
 
             link = driver.find_element(
                 By.XPATH,
@@ -79,8 +83,12 @@ def get_AWS_status(region):
             )
             driver.execute_script("arguments[0].click();", link)
 
+            print("consegiuu mostrar todas as linhas da regiao")
+
             tr_header = driver.find_element(By.TAG_NAME, "tr")
             columns = [i.text for i in tr_header.find_elements(By.TAG_NAME, "th")]
+
+            print("consegiuu pegar todas as linhas da regiao")
 
             columns = [
                 item
@@ -102,7 +110,7 @@ def get_AWS_status(region):
                     row_data = [item for item in row_data if item != ""]
 
                     data["services"][row_data[0]] = dict(zip(columns, row_data[1:]))
-
+            print("rodou o for de boas")
         except Exception as error:
             print("parou aqui no erro")
             data["request_status"]["status"] = 404
