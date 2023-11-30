@@ -1,7 +1,8 @@
 from flask import Flask
 import utils.service
 from flask_cors import CORS
-import json
+from flask import request
+
 
 app = Flask(__name__)
 CORS(app)
@@ -183,9 +184,24 @@ def returnIncidentsHistoricJiraSoftware():
     return filteredIncidentsHistoric
 
 
-@app.route("/aws/select")
-def index():
-    try:
-        return utils.service.get_AWS_status("Sao Paulo")
-    except Exception as error:
-        return json.dumps({"status": 500, "error": error})
+@app.route("/oracle/historicalAcidents")
+def returnIncidentsHistoricOracleSoftware():
+    month = request.args.get("month")
+    jsonIncidents = utils.service.selectRequestUrl(
+        f"https://ocistatus.oraclecloud.com/api/v2/incident-summary/2023{month}.json"
+    )
+
+    arrayIncidents = jsonIncidents["incidentSummaries"]
+
+    filteredIncidentsHistoric = []
+
+    for i in arrayIncidents:
+        filteredIncidentsHistoric.append(
+            {
+                "name": i["title"],
+                "status": i["incidentStatus"],
+                "created_at": i["incidentStartTime"],
+            }
+        )
+
+    return filteredIncidentsHistoric
