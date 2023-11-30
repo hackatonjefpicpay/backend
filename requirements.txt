@@ -5,3 +5,4 @@ flask-cors
 selenium
 asgiref
 redmail
+webdriver_manager
