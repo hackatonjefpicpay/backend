@@ -2,3 +2,5 @@ Flask
 Gunicorn
 requests
 flask-cors
+selenium
+asgiref
