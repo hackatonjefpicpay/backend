@@ -2,7 +2,8 @@ from flask import Flask
 import utils.service
 from flask_cors import CORS
 from flask import request
-
+from redmail import outlook
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 CORS(app)
@@ -205,3 +206,19 @@ def returnIncidentsHistoricOracleSoftware():
         )
 
     return filteredIncidentsHistoric
+
+@app.route("/email/")
+def sendEventEmail():
+    user = request.args.get("user")
+    outlook.username = f"joao.silva@germinare.org.br"
+    outlook.password = "Bolt200621"
+    outlook.send(
+    receivers=[
+        user
+    ],
+    subject="Backup Open-Metadata, Problema!",
+    text="Olá! Algum serviço está fora do ar",
+)
+    return "Mensagem enviada"
+
+app.run()

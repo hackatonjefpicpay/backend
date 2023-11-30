@@ -10,12 +10,10 @@ import json
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import NoSuchElementException
 
-
 def selectRequestUrl(url):
     request = requests.get(url)
     response = json.loads(request.content)
     return response
-
 
 def get_AWS_status(region):
     chrome_options = webdriver.ChromeOptions()
