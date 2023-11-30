@@ -16,6 +16,7 @@ def selectRequestUrl(url):
 
 
 def get_AWS_status(region):
+    print("parou aqui no início mesmo")
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--headless")
 
@@ -29,6 +30,8 @@ def get_AWS_status(region):
         },
         "services": {},
     }
+
+    print("tem o drivere", chrome_options)
 
     def getEventInfo(cell):
         div_button = cell.find_element(By.CSS_SELECTOR, "div[role='button']")
@@ -55,9 +58,10 @@ def get_AWS_status(region):
         return event_info
 
     with webdriver.Chrome(options=chrome_options) as driver:
+        print("parou aqui no início")
         try:
             driver.get("https://health.aws.amazon.com/health/status")
-            revealed = WebDriverWait(driver, 10).until(
+            revealed = WebDriverWait(driver, 30).until(
                 EC.visibility_of_element_located(
                     (By.CLASS_NAME, "awsui_row_wih1l_1l1xk_301")
                 )
@@ -100,11 +104,12 @@ def get_AWS_status(region):
                     data["services"][row_data[0]] = dict(zip(columns, row_data[1:]))
 
         except Exception as error:
+            print("parou aqui no erro")
             data["request_status"]["status"] = 404
-            data["request_status"]["description"] = "Bad request"
+            data["request_status"]["description"] = "Bad request: " + error
 
         driver.quit()
 
     data_json = json.dumps(data)
-    print(data_json)
+    print("parou aqui no fim")
     return data_json
