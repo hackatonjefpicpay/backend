@@ -1,7 +1,7 @@
 from flask import Flask
 import utils.service
 from flask_cors import CORS
-
+import json
 
 app = Flask(__name__)
 CORS(app)
@@ -185,4 +185,7 @@ def returnIncidentsHistoricJiraSoftware():
 
 @app.route("/aws/select")
 def index():
-    return utils.service.get_AWS_status("Sao Paulo")
+    try:
+        return utils.service.get_AWS_status("Sao Paulo")
+    except Exception as error:
+        return json.dumps({"status": 500, "error": error})
