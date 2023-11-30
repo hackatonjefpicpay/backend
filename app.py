@@ -40,44 +40,142 @@ def findAllStatusInfoOracle():
 
 @app.route("/jira/select")
 def returnSummaryJiraSoftware():
-    jsonSumary = utils.service.selectRequestUrl(
+    jsonSummary = utils.service.selectRequestUrl(
         "https://jira-software.status.atlassian.com/api/v2/summary.json"
     )
 
-    keySumaryPage = ["updated_at"]
+    keySummaryPage = ["updated_at"]
+    keySummaryStatus = ["description"]
+    keySummaryComponents = ["name", "status", "updated_at"]
 
-    keySumaryStatus = ["description"]
-
-    keySumaryComponents = ["name", "status", "updated_at"]
-
-    filteredSumaryPage = {
-        item: jsonSumary["page"].get(item)
-        if item in jsonSumary["page"]
-        else jsonSumary.get(item)
-        for item in keySumaryPage
+    filteredSummaryPage = {
+        item: jsonSummary["page"].get(item)
+        if item in jsonSummary["page"]
+        else jsonSummary.get(item)
+        for item in keySummaryPage
     }
-    filteredSumaryStatus = {
-        item: jsonSumary["status"].get(item)
-        if item in jsonSumary["status"]
-        else jsonSumary.get(item)
-        for item in keySumaryStatus
-    }
-    filteredSumaryComponents = []
 
-    for i in jsonSumary["components"]:
-        filteredSumaryComponents.append(
+    filteredSummaryStatus = {
+        item: jsonSummary["status"].get(item)
+        if item in jsonSummary["status"]
+        else jsonSummary.get(item)
+        for item in keySummaryStatus
+    }
+
+    filteredSummaryComponents = []
+    for i in jsonSummary["components"]:
+        filteredSummaryComponents.append(
             {
-                item: jsonSumary["components"][0].get(item)
-                if item in jsonSumary["components"][0]
-                else jsonSumary.get(item)
-                for item in keySumaryComponents
+                item: i.get(item) if item in i else jsonSummary.get(item)
+                for item in keySummaryComponents
             }
         )
 
-    objectSumary = {
-        "page": filteredSumaryPage,
-        "status": filteredSumaryStatus,
-        "components": filteredSumaryComponents,
+    objectSummary = {
+        "page": filteredSummaryPage,
+        "status": filteredSummaryStatus,
+        "components": filteredSummaryComponents,
+        "incidents": jsonSummary["incidents"],
     }
 
-    return objectSumary
+    return objectSummary
+
+
+@app.route("/oracle/countStatus")
+def countOracleServiceStatus():
+    regions = {}
+    dataResponse = findAllStatusInfoOracle()
+    for i in dataResponse["components"]:
+        status = {
+            "normal": 0,
+            "warn": 0,
+            "down": 0,
+            "total": 0,
+            "percentualNormal": "0",
+            "percentualWarn": "0",
+            "percentualDown": "0",
+        }
+        for j in dataResponse["components"][i]:
+            status["total"] += 1
+            if j["status"] == "NormalPerformance":
+                status["normal"] += 1
+            elif j["status"] == "Service Down":
+                status["down"] += 1
+            else:
+                status["warn"] += 1
+            regions[i] = status
+
+            status[
+                "percentualNormal"
+            ] = f'{round((status["normal"] * 100) / (status["total"]),2)}%'
+            status[
+                "percentualDown"
+            ] = f'{round((status["down"] * 100) / (status["total"]), 2)}%'
+            status[
+                "percentualWarn"
+            ] = f'{round((status["warn"] * 100) / (status["total"]),2)}%'
+
+    return regions
+
+
+@app.route("/jira/countStatus")
+def countComponentsJiraSoftware():
+    responseSummary = returnSummaryJiraSoftware()
+
+    countComponentsJiraSoftware = len(responseSummary["components"])
+
+    operational = sum(
+        1 for i in responseSummary["components"] if i["status"] == "operational"
+    )
+    degraded_performance = sum(
+        1
+        for i in responseSummary["components"]
+        if i["status"] == "degraded_performance"
+    )
+    partial_outage = sum(
+        1 for i in responseSummary["components"] if i["status"] == "partial_outage"
+    )
+    major_outage = sum(
+        1 for i in responseSummary["components"] if i["status"] == "major_outage"
+    )
+
+    countObject = {
+        "operational": operational,
+        "degraded_performance": degraded_performance,
+        "partial_outage": partial_outage,
+        "major_outage": major_outage,
+        "up": operational / countComponentsJiraSoftware * 100
+        if countComponentsJiraSoftware
+        else 0,
+        "warn": degraded_performance / countComponentsJiraSoftware * 100
+        if countComponentsJiraSoftware
+        else 0,
+        "down": (partial_outage + major_outage) / countComponentsJiraSoftware * 100
+        if countComponentsJiraSoftware
+        else 0,
+    }
+
+    return countObject
+
+
+@app.route("/jira/historicalAcidents")
+def returnIncidentsHistoricJiraSoftware():
+    jsonIncidents = utils.service.selectRequestUrl(
+        "https://jira-software.status.atlassian.com/api/v2/incidents.json"
+    )
+
+    arrayIncidents = jsonIncidents["incidents"]
+
+    filteredIncidentsHistoric = []
+
+    for i in arrayIncidents:
+        filteredIncidentsHistoric.append(
+            {
+                "name": i["name"],
+                "status": i["status"],
+                "created_at": i["created_at"],
+                "impact": i["impact"],
+            }
+        )
+
+    return filteredIncidentsHistoric
